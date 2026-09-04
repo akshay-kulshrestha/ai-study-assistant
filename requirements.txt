@@ -1,9 +1,5 @@
 Flask>=3.0
-# ai_service.py needs the modern client API (genai.Client), schema-forced
-# generation via response_json_schema, and the genai.errors.ServerError /
-# ClientError classes -- all postdate google-genai's pre-1.0 releases, so
-# >=0.5 would technically permit installing a version that's missing all
-# three and breaking on a fresh install even though it satisfies this file.
 google-genai>=1.25
 pypdf>=4.0
 python-docx>=1.1
+python-dotenv>=1.0.0
