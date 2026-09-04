@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Quiz - {{ document.original_name }}{% endblock %}
+{% block content %}
+
+<div class="row between" style="align-items:flex-start;margin-bottom:24px;">
+    <div>
+        <a href="{{ url_for('study_page', document_id=document.id) }}" class="btn-ghost" style="margin-left:-8px;margin-bottom:8px;">
+            <i data-lucide="arrow-left" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>Back to notes
+        </a>
+        <h1 style="font-size:1.6rem;margin:0;">Quiz: {{ document.original_name }}</h1>
+        <p class="muted" style="margin-top:4px;">{{ quiz.questions|length }} questions</p>
+    </div>
+</div>
+
+<div id="error" class="error-box hidden"></div>
+
+<form id="quiz-form">
+    {% for q in quiz.questions %}
+    {% set q_index = loop.index0 %}
+    <div class="card quiz-question" data-index="{{ q_index }}">
+        <p class="q-num">Question {{ loop.index }} of {{ quiz.questions|length }}</p>
+        <p class="q-text" id="q-text-{{ q_index }}">{{ q.question }}</p>
+        <div class="q-options" role="radiogroup" aria-labelledby="q-text-{{ q_index }}">
+            {% for opt in q.options %}
+            <label class="q-option">
+                <input type="radio" name="q{{ q_index }}" value="{{ loop.index0 }}">
+                <span class="q-option-mark" aria-hidden="true"></span>
+                <span>{{ opt }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <div class="q-feedback hidden"></div>
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="btn-primary btn-block" id="submit-quiz-btn" style="max-width:320px;margin:24px auto;">
+        <i data-lucide="check-circle-2" class="icon" aria-hidden="true" style="width:16px;height:16px;"></i>Submit Quiz
+    </button>
+</form>
+
+<div class="card hidden" id="quiz-result">
+    <div class="quiz-score-ring-wrap" id="quiz-score-ring"></div>
+    <h2 id="quiz-result-title" tabindex="-1" style="text-align:center;"></h2>
+    <p class="muted" style="text-align:center;">Review your answers above &mdash; incorrect ones are marked in red with an explanation.</p>
+    <div class="row" style="justify-content:center;gap:12px;margin-top:20px;">
+        <a href="{{ url_for('study_page', document_id=document.id) }}" class="btn-secondary"><i data-lucide="file-text" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>Back to Notes</a>
+        <a href="{{ url_for('results_page') }}" class="btn-primary"><i data-lucide="bar-chart-2" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>View Progress</a>
+    </div>
+</div>
+
+<script id="quiz-data" type="application/json">{{ {"quiz_id": quiz.id} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+{% endblock %}

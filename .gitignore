@@ -1,0 +1,20 @@
+# Environment / secrets -- never commit real API keys
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# App data -- your uploaded documents and their extracted text/DB rows
+study_assistant.db
+uploads/
+
+# Editor/OS cruft
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

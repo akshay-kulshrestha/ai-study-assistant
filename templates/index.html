@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}AI Study Assistant{% endblock %}
+{% block content %}
+
+<div class="home-hero">
+    <span class="eyebrow"><i data-lucide="sparkles" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>AI-Powered Study Companion</span>
+    <h1>Turn Any Document into <span class="gradient-text">Your Personal Study Guide</span></h1>
+    <p>Upload your PDFs, lecture notes, or textbooks and instantly get smart summaries, interactive quizzes, flashcards, and a chat that answers questions from your material.</p>
+    <div class="home-hero-cta">
+        <a href="{{ url_for('upload_page') }}" class="btn-primary">Start Studying<i data-lucide="arrow-right" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i></a>
+        <a href="{{ url_for('upload_page') }}" class="btn-secondary"><i data-lucide="file-text" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>Upload a Document</a>
+    </div>
+    <div class="stat-strip">
+        <div class="stat-strip-card">
+            <i data-lucide="zap" class="icon" aria-hidden="true"></i>
+            <div class="val">&lt; 5s</div>
+            <div class="lbl">Instant Analysis</div>
+        </div>
+        <div class="stat-strip-card">
+            <i data-lucide="file-text" class="icon" aria-hidden="true"></i>
+            <div class="val">PDF / DOCX / TXT</div>
+            <div class="lbl">File Formats</div>
+        </div>
+        <div class="stat-strip-card">
+            <i data-lucide="target" class="icon" aria-hidden="true"></i>
+            <div class="val">4-in-1</div>
+            <div class="lbl">Study Tools</div>
+        </div>
+    </div>
+</div>
+
+<div class="section-head center" style="margin-top:56px;">
+    <h2>Everything You Need to Master Your Material</h2>
+    <p>Four powerful study tools, all grounded in the content of your uploaded documents.</p>
+</div>
+
+<div class="feature-grid">
+    <div class="card feature-card">
+        <span class="icon-box"><i data-lucide="book-open" class="icon" aria-hidden="true"></i></span>
+        <h3>Smart Summaries</h3>
+        <p>Get structured overviews with key concepts, organized sections, and essential takeaways extracted directly from your document.</p>
+        <ul>
+            <li>Overview &amp; key concepts</li>
+            <li>Topic-organized sections</li>
+            <li>Essential takeaways</li>
+        </ul>
+    </div>
+    <div class="card feature-card">
+        <span class="icon-box"><i data-lucide="graduation-cap" class="icon" aria-hidden="true"></i></span>
+        <h3>Interactive Quizzes</h3>
+        <p>Test your knowledge with auto-generated multiple-choice questions, instant grading, per-question explanations, and score tracking.</p>
+        <ul>
+            <li>Auto-generated questions</li>
+            <li>Instant grading &amp; explanations</li>
+            <li>Animated score visualization</li>
+        </ul>
+    </div>
+    <div class="card feature-card">
+        <span class="icon-box"><i data-lucide="layers" class="icon" aria-hidden="true"></i></span>
+        <h3>Flip-Card Flashcards</h3>
+        <p>Review key terms and definitions with an interactive flip-card interface. Perfect for spaced repetition and quick review sessions.</p>
+        <ul>
+            <li>Auto-generated cards</li>
+            <li>Flip animation</li>
+            <li>Topic-organized</li>
+        </ul>
+    </div>
+    <div class="card feature-card">
+        <span class="icon-box"><i data-lucide="message-circle" class="icon" aria-hidden="true"></i></span>
+        <h3>Document Chat</h3>
+        <p>Ask questions about your document and get answers grounded strictly in the source material. No hallucinations, no outside info.</p>
+        <ul>
+            <li>Source-grounded answers</li>
+            <li>Natural conversation</li>
+            <li>Relevant excerpts</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section-head center" id="how-it-works" style="margin-top:56px;">
+    <h2>How It Works</h2>
+    <p>Three simple steps from document to mastery.</p>
+</div>
+
+<div class="steps-row">
+    <div class="step-card">
+        <div class="step-num-row"><span class="step-num">01</span><span class="line"></span></div>
+        <div class="step-icon-row"><i data-lucide="file-text" class="icon" aria-hidden="true"></i><h3>Upload</h3></div>
+        <p>Drag and drop your PDF, DOCX, or TXT file. We extract the text instantly.</p>
+    </div>
+    <div class="step-card">
+        <div class="step-num-row"><span class="step-num">02</span><span class="line"></span></div>
+        <div class="step-icon-row"><i data-lucide="brain-circuit" class="icon" aria-hidden="true"></i><h3>Analyze</h3></div>
+        <p>The AI engine processes your document and generates summaries, quizzes, and flashcards.</p>
+    </div>
+    <div class="step-card">
+        <div class="step-num-row"><span class="step-num">03</span></div>
+        <div class="step-icon-row"><i data-lucide="graduation-cap" class="icon" aria-hidden="true"></i><h3>Study</h3></div>
+        <p>Review the summary, take quizzes, flip flashcards, and chat with your document.</p>
+    </div>
+</div>
+
+<div class="cta-banner" style="margin-top:56px;">
+    <i data-lucide="bar-chart-2" class="icon icon-lg" aria-hidden="true"></i>
+    <h2>Ready to Study Smarter?</h2>
+    <p>Upload your first document and get instant summaries, quizzes, flashcards, and a study chat.</p>
+    <a href="{{ url_for('upload_page') }}" class="btn-primary">Get Started Free<i data-lucide="arrow-right" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i></a>
+</div>
+
+{% endblock %}

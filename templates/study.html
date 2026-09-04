@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}{{ document.original_name }} - AI Study Assistant{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('library_page') }}" class="btn-ghost" style="margin-left:-8px;margin-bottom:8px;">
+    <i data-lucide="arrow-left" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>Back to Library
+</a>
+
+<div class="doc-header">
+    <span class="icon-box file-icon file-{{ document.file_type }}">
+        <i data-lucide="{{ 'file-text' if document.file_type == 'txt' else ('file-type-2' if document.file_type == 'docx' else 'file') }}" class="icon" aria-hidden="true"></i>
+    </span>
+    <div>
+        <h1>{{ document.original_name }}</h1>
+        <p class="muted"><span class="badge badge-slate" style="margin-right:8px;">{{ document.file_type|upper }}</span>{{ document.word_count }} words &middot; {{ document.uploaded_at[:10] }}</p>
+    </div>
+</div>
+
+<div class="tab-nav" role="tablist" aria-label="Document sections">
+    <button type="button" class="tab-btn active" id="tab-summary" role="tab" aria-selected="true" aria-controls="panel-summary">
+        <i data-lucide="book-open" class="icon" aria-hidden="true"></i>Summary
+    </button>
+    <button type="button" class="tab-btn" id="tab-quiz" role="tab" aria-selected="false" aria-controls="panel-quiz" tabindex="-1">
+        <i data-lucide="graduation-cap" class="icon" aria-hidden="true"></i>Quiz
+    </button>
+    <button type="button" class="tab-btn" id="tab-flashcards" role="tab" aria-selected="false" aria-controls="panel-flashcards" tabindex="-1">
+        <i data-lucide="layers" class="icon" aria-hidden="true"></i>Flashcards
+    </button>
+    <button type="button" class="tab-btn" id="tab-chat" role="tab" aria-selected="false" aria-controls="panel-chat" tabindex="-1">
+        <i data-lucide="message-circle" class="icon" aria-hidden="true"></i>Chat
+    </button>
+</div>
+
+<div id="error" class="error-box hidden"></div>
+
+<!-- ============================================================ summary -->
+<div id="panel-summary" role="tabpanel" aria-labelledby="tab-summary" tabindex="-1">
+    <div class="card">
+        <div class="row between" style="margin-bottom:12px;">
+            <h3 style="margin:0;display:flex;align-items:center;gap:8px;"><i data-lucide="sparkles" class="icon" aria-hidden="true" style="width:17px;height:17px;color:var(--primary);"></i>Overview</h3>
+            {% if not document.summary %}
+            <button type="button" class="btn-secondary" id="summarize-btn"><i data-lucide="wand-2" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>Generate Summary</button>
+            {% endif %}
+        </div>
+        <div id="summary-empty" class="{{ 'hidden' if document.summary else '' }}">
+            <p class="muted">No summary yet &mdash; click "Generate Summary" to have the AI condense these notes.</p>
+        </div>
+        <div id="summary-loading" class="hidden" style="display:flex;align-items:center;gap:10px;">
+            <div class="spinner" style="width:24px;height:24px;"><div class="ring" style="width:24px;height:24px;border-width:3px;"></div></div>
+            <span class="muted">Summarizing...</span>
+        </div>
+        <p id="summary-text" class="summary-text {{ 'hidden' if not document.summary else '' }}">{{ document.summary or '' }}</p>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <div class="row between" style="margin-bottom:10px;">
+            <h3 style="margin:0;display:flex;align-items:center;gap:8px;"><i data-lucide="file-text" class="icon" aria-hidden="true" style="width:17px;height:17px;color:var(--primary);"></i>Extracted Text</h3>
+            <button type="button" class="btn-ghost" id="toggle-text-btn" aria-expanded="false" aria-controls="extracted-text">Expand<i data-lucide="chevron-down" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i></button>
+        </div>
+        <pre class="extracted-text" id="extracted-text">{{ document.extracted_text }}</pre>
+    </div>
+</div>
+
+<!-- =============================================================== quiz -->
+<div id="panel-quiz" role="tabpanel" aria-labelledby="tab-quiz" tabindex="-1" hidden>
+    {% if quiz %}
+    <div class="quiz-progress-header" id="quiz-progress-header">
+        <div class="quiz-progress-row">
+            <span id="quiz-progress-label">Question 1 of {{ quiz.questions|length }}</span>
+            <span id="quiz-progress-pct">{{ (100 / quiz.questions|length)|round|int }}%</span>
+        </div>
+        <div class="quiz-progress-track"><div class="quiz-progress-fill" id="quiz-progress-fill" style="width:{{ (100 / quiz.questions|length)|round|int }}%;"></div></div>
+    </div>
+
+    <form id="quiz-form">
+        {% for q in quiz.questions %}
+        {% set q_index = loop.index0 %}
+        <div class="card quiz-question" data-index="{{ q_index }}" {{ 'hidden' if not loop.first else '' }}>
+            {% if q.topic %}<span class="topic-tag">{{ q.topic }}</span>{% endif %}
+            <p class="q-text" id="q-text-{{ q_index }}">{{ q.question }}</p>
+            <div class="q-options" role="radiogroup" aria-labelledby="q-text-{{ q_index }}">
+                {% for opt in q.options %}
+                <label class="q-option">
+                    <input type="radio" name="q{{ q_index }}" value="{{ loop.index0 }}">
+                    <span class="q-option-letter" aria-hidden="true">{{ ['A', 'B', 'C', 'D'][loop.index0] }}</span>
+                    <span>{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="q-feedback hidden"></div>
+            <div class="q-nav">
+                {% if not loop.first %}<button type="button" class="btn-secondary q-prev">Previous</button>{% endif %}
+                {% if not loop.last %}
+                <button type="button" class="btn-primary q-next">Next<i data-lucide="chevron-right" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i></button>
+                {% else %}
+                <button type="submit" class="btn-primary" id="submit-quiz-btn"><i data-lucide="check-circle-2" class="icon" aria-hidden="true" style="width:16px;height:16px;"></i>Submit Quiz</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </form>
+
+    <div class="card hidden" id="quiz-result">
+        <div class="quiz-score-ring-wrap" id="quiz-score-ring"></div>
+        <h2 id="quiz-result-title" tabindex="-1" style="text-align:center;"></h2>
+        <p class="muted" style="text-align:center;">Review your answers above &mdash; incorrect ones are marked in red with an explanation.</p>
+        <div class="row" style="justify-content:center;gap:12px;margin-top:20px;">
+            <a href="{{ url_for('library_page') }}" class="btn-secondary"><i data-lucide="bar-chart-2" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>View Progress</a>
+        </div>
+    </div>
+
+    <script id="quiz-data" type="application/json">{{ {"quiz_id": quiz.id} | tojson }}</script>
+    {% else %}
+    <div class="card action-card" style="max-width:440px;margin:24px auto;">
+        <span class="icon-box grad-amber-orange" style="margin:0 auto 14px;"><i data-lucide="graduation-cap" class="icon" aria-hidden="true"></i></span>
+        <h3>Test Your Knowledge</h3>
+        <p>Generate a multiple-choice quiz from your document. Get instant grading, explanations, and topic tags.</p>
+        <label class="mini-label" for="quiz-count">Number of questions</label>
+        <input type="number" id="quiz-count" class="input-field" value="5" min="3" max="10" style="margin-bottom:14px;">
+        <button type="button" class="btn-primary btn-block" id="quiz-btn">
+            <i data-lucide="play" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>Generate Quiz
+        </button>
+        <div class="hidden generating-panel" id="quiz-generating">
+            <div class="spinner" style="width:32px;height:32px;"><div class="ring" style="width:32px;height:32px;border-width:3px;"></div></div>
+            <p class="generating-text">Reading your notes and writing questions.</p>
+            <div class="progress-track-mini"><div class="progress-fill-mini"></div></div>
+            <p class="elapsed-text">0s elapsed</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- ========================================================= flashcards -->
+<div id="panel-flashcards" role="tabpanel" aria-labelledby="tab-flashcards" tabindex="-1" hidden>
+    {% if flashcard_set %}
+    <div class="fc-header">
+        <div>
+            <h3 style="margin:0;">Flashcards</h3>
+            <p class="muted" id="card-counter" style="margin-top:2px;">{{ flashcard_set.cards|length }} cards &middot; Card 1 of {{ flashcard_set.cards|length }}</p>
+        </div>
+        <div class="fc-header-actions">
+            <button type="button" class="icon-btn" id="fc-shuffle" aria-label="Shuffle cards"><i data-lucide="shuffle" class="icon" aria-hidden="true"></i></button>
+            <button type="button" class="icon-btn" id="fc-reset" aria-label="Reset card order"><i data-lucide="rotate-ccw" class="icon" aria-hidden="true"></i></button>
+        </div>
+    </div>
+
+    <div class="flashcard-stage">
+        <div class="flashcard" id="flashcard">
+            <div class="flashcard-face flashcard-front">
+                <span class="topic-tag hidden" id="fc-topic"></span>
+                <span class="fc-label">Question</span>
+                <p id="fc-question"></p>
+                <span class="fc-hint" aria-hidden="true"><i data-lucide="rotate-cw" class="icon" aria-hidden="true" style="width:13px;height:13px;"></i>Click to flip</span>
+            </div>
+            <div class="flashcard-face flashcard-back">
+                <span class="fc-label">Answer</span>
+                <p id="fc-answer"></p>
+                <span class="fc-hint" aria-hidden="true"><i data-lucide="rotate-cw" class="icon" aria-hidden="true" style="width:13px;height:13px;"></i>Click to flip back</span>
+            </div>
+        </div>
+
+        <div class="fc-dots" id="fc-dots" aria-hidden="true"></div>
+
+        <div class="flashcard-nav">
+            <button type="button" class="btn-secondary" id="fc-prev"><i data-lucide="chevron-left" class="icon" aria-hidden="true" style="width:16px;height:16px;"></i>Previous</button>
+            <button type="button" class="btn-primary" id="fc-next">Next<i data-lucide="chevron-right" class="icon" aria-hidden="true" style="width:16px;height:16px;"></i></button>
+        </div>
+    </div>
+
+    <script id="flashcards-data" type="application/json">{{ flashcard_set.cards | tojson }}</script>
+    {% else %}
+    <div class="card action-card" style="max-width:440px;margin:24px auto;">
+        <span class="icon-box grad-violet-blue" style="margin:0 auto 14px;"><i data-lucide="layers" class="icon" aria-hidden="true"></i></span>
+        <h3>Flashcard Deck</h3>
+        <p>Generate a deck of interactive flip-cards with key terms and definitions from your document.</p>
+        <label class="mini-label" for="card-count">Number of cards</label>
+        <input type="number" id="card-count" class="input-field" value="8" min="4" max="15" style="margin-bottom:14px;">
+        <button type="button" class="btn-primary btn-block" id="flashcards-btn">
+            <i data-lucide="play" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>Generate Flashcards
+        </button>
+        <div class="hidden generating-panel" id="flashcards-generating">
+            <div class="spinner" style="width:32px;height:32px;"><div class="ring" style="width:32px;height:32px;border-width:3px;"></div></div>
+            <p class="generating-text">Reading your notes and writing flashcards.</p>
+            <div class="progress-track-mini"><div class="progress-fill-mini"></div></div>
+            <p class="elapsed-text">0s elapsed</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- =============================================================== chat -->
+<div id="panel-chat" role="tabpanel" aria-labelledby="tab-chat" tabindex="-1" hidden>
+    <div class="card chat-card">
+        <div class="chat-card-head">
+            <span class="icon-box"><i data-lucide="message-circle" class="icon" aria-hidden="true"></i></span>
+            <div>
+                <h3 style="margin:0;">Document Chat</h3>
+                <p class="muted" style="margin:2px 0 0;font-size:.85rem;">Answers grounded in your document</p>
+            </div>
+            <button type="button" class="icon-btn{{ '' if chat_messages else ' hidden' }}" id="chat-clear-btn" aria-label="Clear chat history" title="Clear chat" style="margin-left:auto;">
+                <i data-lucide="trash-2" class="icon" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="chat-log" id="chat-log">
+            {% if chat_messages %}
+                {% for m in chat_messages %}
+                <div class="chat-msg {{ m.role }}">
+                    <span class="chat-role">{{ 'You' if m.role == 'user' else 'AI' }}</span>
+                    <p>{{ m.content }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="chat-empty-state" id="chat-empty">
+                <span class="icon-box grad-violet-blue" style="margin:0 auto 14px;"><i data-lucide="message-circle" class="icon" aria-hidden="true"></i></span>
+                <h3 style="margin:0 0 6px;font-size:1rem;">Ask anything about your document</h3>
+                <p class="muted" style="margin:0 0 18px;">I'll search through the content and answer based only on what's in the text.</p>
+                <div class="chat-suggestions">
+                    <button type="button" class="chat-suggestion">What is the main topic of this document?</button>
+                    <button type="button" class="chat-suggestion">Can you summarize the key concepts?</button>
+                    <button type="button" class="chat-suggestion">What are the most important takeaways?</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="chat-input-row">
+            <input type="text" id="chat-input" class="input-field" placeholder="Ask a question about your document...">
+            <button type="button" class="btn-primary" id="chat-send-btn" aria-label="Send message"><i data-lucide="send" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i></button>
+        </div>
+    </div>
+</div>
+
+<script id="document-data" type="application/json">{{ {"document_id": document.id} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/study.js') }}"></script>
+{% endblock %}

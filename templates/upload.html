@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Upload a Document - AI Study Assistant{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('library_page') }}" class="btn-ghost" style="margin-left:-8px;margin-bottom:16px;">
+    <i data-lucide="arrow-left" class="icon" aria-hidden="true" style="width:15px;height:15px;"></i>Back to Library
+</a>
+
+<div class="section-head center">
+    <h2 style="font-size:1.7rem;">Upload Your Document</h2>
+    <p>Drop your study material below and we'll generate summaries, quizzes, flashcards, and a study chat.</p>
+</div>
+
+<div id="error" class="error-box hidden"></div>
+
+<div class="card upload-card" id="upload-card">
+    <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Upload a file. Click, press Enter, or drag and drop a PDF, DOCX, or TXT file, up to 15MB.">
+        <span class="icon-box"><i data-lucide="upload-cloud" class="icon" aria-hidden="true"></i></span>
+        <p class="dz-title">Drag &amp; drop your file here</p>
+        <p class="dz-sub">or <strong>browse</strong> to choose a file</p>
+        <div class="format-badges">
+            <span class="format-badge">PDF</span>
+            <span class="format-badge">DOCX</span>
+            <span class="format-badge">TXT</span>
+            <span class="format-badge">Max 15MB</span>
+        </div>
+        <input type="file" id="file-input" accept=".pdf,.docx,.txt" hidden>
+    </div>
+    <div class="hidden" id="uploading-status" role="status" aria-live="polite">
+        <div class="spinner" style="width:44px;height:44px;"><div class="ring" style="width:44px;height:44px;border-width:3px;"></div></div>
+        <p class="uploading-text">Reading and processing your file...</p>
+    </div>
+</div>
+
+<div class="format-info-grid">
+    <div class="card format-info-card">
+        <span class="icon-box"><i data-lucide="file-text" class="icon" aria-hidden="true"></i></span>
+        <h3>PDF Documents</h3>
+        <p class="muted">Lecture slides, papers, books</p>
+    </div>
+    <div class="card format-info-card">
+        <span class="icon-box"><i data-lucide="file-text" class="icon" aria-hidden="true"></i></span>
+        <h3>Word Files</h3>
+        <p class="muted">Notes, assignments, essays</p>
+    </div>
+    <div class="card format-info-card">
+        <span class="icon-box"><i data-lucide="file-text" class="icon" aria-hidden="true"></i></span>
+        <h3>Text Files</h3>
+        <p class="muted">Plain text study material</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}

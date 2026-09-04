@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Flashcards - {{ document.original_name }}{% endblock %}
+{% block content %}
+
+<div class="row between" style="align-items:flex-start;margin-bottom:24px;">
+    <div>
+        <a href="{{ url_for('study_page', document_id=document.id) }}" class="btn-ghost" style="margin-left:-8px;margin-bottom:8px;">
+            <i data-lucide="arrow-left" class="icon" style="width:15px;height:15px;"></i>Back to notes
+        </a>
+        <h1 style="font-size:1.6rem;margin:0;">Flashcards: {{ document.original_name }}</h1>
+        <p class="muted" style="margin-top:4px;" id="card-counter">Card 1 of {{ flashcard_set.cards|length }}</p>
+    </div>
+</div>
+
+<div class="flashcard-stage">
+    <div class="flashcard" id="flashcard">
+        <div class="flashcard-face flashcard-front">
+            <span class="fc-label">Question</span>
+            <p id="fc-question"></p>
+            <span class="fc-hint" aria-hidden="true"><i data-lucide="rotate-cw" class="icon" style="width:13px;height:13px;"></i>Click to flip</span>
+        </div>
+        <div class="flashcard-face flashcard-back">
+            <span class="fc-label">Answer</span>
+            <p id="fc-answer"></p>
+            <span class="fc-hint" aria-hidden="true"><i data-lucide="rotate-cw" class="icon" style="width:13px;height:13px;"></i>Click to flip back</span>
+        </div>
+    </div>
+
+    <div class="flashcard-nav">
+        <button type="button" class="btn-secondary" id="fc-prev"><i data-lucide="chevron-left" class="icon" style="width:16px;height:16px;"></i>Previous</button>
+        <button type="button" class="btn-primary" id="fc-next">Next<i data-lucide="chevron-right" class="icon" style="width:16px;height:16px;"></i></button>
+    </div>
+</div>
+
+<script id="flashcards-data" type="application/json">{{ flashcard_set.cards | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/flashcards.js') }}"></script>
+{% endblock %}

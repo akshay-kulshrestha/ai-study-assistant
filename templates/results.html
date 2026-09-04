@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Progress - AI Study Assistant{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:24px;">
+    <h1 style="font-size:1.6rem;margin:0;">Your Progress</h1>
+    <p class="muted" style="margin-top:4px;">Track quiz performance and spot weak areas across your study materials.</p>
+</div>
+
+<div class="stats-row">
+    <div class="stat-card"><i data-lucide="list-checks" class="icon" aria-hidden="true"></i><div class="val">{{ total_attempts }}</div><div class="lbl">Quizzes Taken</div></div>
+    <div class="stat-card"><i data-lucide="target" class="icon" aria-hidden="true"></i><div class="val">{{ overall_pct is not none and (overall_pct ~ '%') or '—' }}</div><div class="lbl">Overall Accuracy</div></div>
+    <div class="stat-card"><i data-lucide="triangle-alert" class="icon" aria-hidden="true"></i><div class="val">{{ weak_areas|length }}</div><div class="lbl">Weak Areas</div></div>
+</div>
+
+{% if weak_areas %}
+<div class="section-head" style="margin-top:36px;">
+    <h2>Weak Areas</h2>
+    <p>Topics where your average quiz score is below 60%.</p>
+</div>
+<div class="weak-list">
+    {% for area in weak_areas %}
+    <a href="{{ url_for('study_page', document_id=area.document_id) }}" class="card weak-item">
+        <span class="icon-box" style="background:var(--tint-red);color:var(--red);"><i data-lucide="triangle-alert" class="icon" aria-hidden="true"></i></span>
+        <div class="weak-item-main">
+            <h3>{{ area.name }}</h3>
+            <p class="muted">{{ area.attempts }} attempt{{ 's' if area.attempts != 1 }}</p>
+        </div>
+        <span class="badge" style="background:var(--tint-red);color:var(--red);">{{ area.percentage }}%</span>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="section-head" style="margin-top:36px;">
+    <h2>Quiz History</h2>
+    <p>Every quiz attempt, most recent first.</p>
+</div>
+
+{% if attempts %}
+<div class="attempt-list">
+    {% for a in attempts %}
+    {% set doc = documents.get(a.document_id) %}
+    {% set pct = (a.score / a.total * 100)|round(0, 'common')|int if a.total else 0 %}
+    <div class="card attempt-row">
+        <div class="attempt-score {{ 'good' if pct >= 70 else ('mid' if pct >= 40 else 'low') }}">{{ pct }}%</div>
+        <div class="attempt-main">
+            <h3>{{ doc.original_name if doc else 'Deleted document' }}</h3>
+            <p class="muted">{{ a.score }}/{{ a.total }} correct &middot; {{ a.completed_at[:10] }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card empty-state">
+    <span class="icon-box"><i data-lucide="bar-chart-2" class="icon" aria-hidden="true"></i></span>
+    <h3 style="margin:0;font-size:1.1rem;">No quizzes taken yet</h3>
+    <p class="muted" style="max-width:340px;margin:6px auto 0;">Generate a quiz from your study materials to start tracking your progress.</p>
+    <a href="{{ url_for('home') }}" class="btn-primary" style="margin-top:20px;">Go to Materials<i data-lucide="arrow-right" class="icon" aria-hidden="true" style="width:16px;height:16px;"></i></a>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}My Library - AI Study Assistant{% endblock %}
+{% block content %}
+
+<div class="library-header">
+    <div>
+        <h1>My Library</h1>
+        <p class="muted" style="margin-top:4px;">Pick up where you left off, or check your progress.</p>
+    </div>
+    <a href="{{ url_for('upload_page') }}" class="btn-primary"><i data-lucide="plus" class="icon" aria-hidden="true" style="width:16px;height:16px;"></i>Upload Document</a>
+</div>
+
+<div id="error" class="error-box hidden"></div>
+
+<div class="tab-nav" role="tablist" aria-label="Library sections" style="margin-top:20px;">
+    <button type="button" class="tab-btn active" id="tab-documents" role="tab" aria-selected="true" aria-controls="panel-documents">
+        <i data-lucide="file-text" class="icon" aria-hidden="true"></i>Documents
+    </button>
+    <button type="button" class="tab-btn" id="tab-progress" role="tab" aria-selected="false" aria-controls="panel-progress" tabindex="-1">
+        <i data-lucide="bar-chart-2" class="icon" aria-hidden="true"></i>Progress Dashboard
+    </button>
+</div>
+
+<div id="panel-documents" role="tabpanel" aria-labelledby="tab-documents" tabindex="-1">
+    {% if doc_cards %}
+    <div class="lib-doc-grid">
+        {% for doc in doc_cards %}
+        <div class="card doc-card-lib">
+            <div class="doc-card-top">
+                <span class="icon-box file-icon file-{{ doc.file_type }}">
+                    <i data-lucide="{{ 'file-text' if doc.file_type == 'txt' else ('file-type-2' if doc.file_type == 'docx' else 'file') }}" class="icon" aria-hidden="true"></i>
+                </span>
+                <button type="button" class="delete-btn" data-id="{{ doc.id }}" title="Delete" aria-label="Delete {{ doc.original_name }}"><i data-lucide="trash-2" class="icon" aria-hidden="true"></i></button>
+            </div>
+            <h3>{{ doc.original_name }}</h3>
+            <p class="muted" style="margin:2px 0 0;font-size:.85rem;">{{ doc.file_type|upper }} &middot; {{ doc.word_count }} words</p>
+            <div class="lib-stat-row">
+                <div class="lib-stat">
+                    <i data-lucide="graduation-cap" class="icon" aria-hidden="true"></i>
+                    <div class="val">{{ doc.quiz_count }}</div>
+                    <div class="lbl">Quizzes</div>
+                </div>
+                <div class="lib-stat">
+                    <i data-lucide="trending-up" class="icon" aria-hidden="true"></i>
+                    <div class="val">{{ (doc.best_pct ~ '%') if doc.best_pct is not none else '—' }}</div>
+                    <div class="lbl">Best</div>
+                </div>
+                <div class="lib-stat">
+                    <i data-lucide="clock" class="icon" aria-hidden="true"></i>
+                    <div class="val">{{ doc.last_studied[:10] if doc.last_studied else '—' }}</div>
+                    <div class="lbl">Studied</div>
+                </div>
+            </div>
+            <a href="{{ url_for('study_page', document_id=doc.id) }}" class="lib-open-link">Open<i data-lucide="arrow-right" class="icon" aria-hidden="true" style="width:14px;height:14px;"></i></a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card empty-state">
+        <span class="icon-box"><i data-lucide="inbox" class="icon" aria-hidden="true"></i></span>
+        <h3 style="margin:0;font-size:1.1rem;">No study materials yet</h3>
+        <p class="muted" style="max-width:340px;margin:6px auto 0;">Upload your first file to generate a summary, quiz, or flashcards.</p>
+        <a href="{{ url_for('upload_page') }}" class="btn-primary" style="margin-top:20px;">Upload a Document<i data-lucide="arrow-right" class="icon" aria-hidden="true" style="width:16px;height:16px;"></i></a>
+    </div>
+    {% endif %}
+</div>
+
+<div id="panel-progress" role="tabpanel" aria-labelledby="tab-progress" tabindex="-1" hidden>
+    <div class="stats-row">
+        <div class="stat-card"><i data-lucide="list-checks" class="icon" aria-hidden="true"></i><div class="val">{{ total_attempts }}</div><div class="lbl">Quizzes Taken</div></div>
+        <div class="stat-card"><i data-lucide="target" class="icon" aria-hidden="true"></i><div class="val">{{ overall_pct is not none and (overall_pct ~ '%') or '—' }}</div><div class="lbl">Overall Accuracy</div></div>
+        <div class="stat-card"><i data-lucide="triangle-alert" class="icon" aria-hidden="true"></i><div class="val">{{ weak_areas|length }}</div><div class="lbl">Weak Areas</div></div>
+    </div>
+
+    {% if weak_areas %}
+    <div class="section-head" style="margin-top:32px;">
+        <h2>Weak Areas</h2>
+        <p>Topics where your average quiz score is below 60%.</p>
+    </div>
+    <div class="weak-list">
+        {% for area in weak_areas %}
+        <a href="{{ url_for('study_page', document_id=area.document_id) }}" class="card weak-item">
+            <span class="icon-box" style="background:var(--tint-red);color:var(--red);"><i data-lucide="triangle-alert" class="icon" aria-hidden="true"></i></span>
+            <div class="weak-item-main">
+                <h3>{{ area.name }}</h3>
+                <p class="muted">{{ area.attempts }} attempt{{ 's' if area.attempts != 1 }}</p>
+            </div>
+            <span class="badge" style="background:var(--tint-red);color:var(--red);">{{ area.percentage }}%</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="section-head" style="margin-top:32px;">
+        <h2>Quiz History</h2>
+        <p>Every quiz attempt, most recent first.</p>
+    </div>
+
+    {% if attempts %}
+    <div class="attempt-list">
+        {% for a in attempts %}
+        {% set doc = documents_by_id.get(a.document_id) %}
+        {% set pct = (a.score / a.total * 100)|round(0, 'common')|int if a.total else 0 %}
+        <div class="card attempt-row">
+            <div class="attempt-score {{ 'good' if pct >= 70 else ('mid' if pct >= 40 else 'low') }}">{{ pct }}%</div>
+            <div class="attempt-main">
+                <h3>{{ doc.original_name if doc else 'Deleted document' }}</h3>
+                <p class="muted">{{ a.score }}/{{ a.total }} correct &middot; {{ a.completed_at[:10] }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card empty-state">
+        <span class="icon-box"><i data-lucide="bar-chart-2" class="icon" aria-hidden="true"></i></span>
+        <h3 style="margin:0;font-size:1.1rem;">No quizzes taken yet</h3>
+        <p class="muted" style="max-width:340px;margin:6px auto 0;">Generate a quiz from your study materials to start tracking your progress.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/library.js') }}"></script>
+{% endblock %}
